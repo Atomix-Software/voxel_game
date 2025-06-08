@@ -1,0 +1,3 @@
+[submodule "Voxel_Game/vendors/arcane_framework"]
+	path = Voxel_Game/vendors/arcane_framework
+	url = https://github.com/Atomix-Software/arcane_framework
