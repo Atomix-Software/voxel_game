@@ -94,6 +94,9 @@ namespace Game
 		if (rotation.x >= 89.0f) rotation.x = 89.0f;
 		else if (rotation.x <= -89.0f) rotation.x = -89.0f;
 
+		if (rotation.y >= 360.0f) rotation.y = 0.0f;
+		else if (rotation.y <= 0.0f) rotation.y = 360.0f;
+
 		// Apply updated rotation to the camera
 		m_Camera->SetRotation(rotation);
 

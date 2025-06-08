@@ -6,30 +6,78 @@ namespace Game
 {
 	using namespace Arcane;
 
+	struct Transform
+	{
+		glm::vec3 Position;
+		float Scale = 1.0f;
+	};
+	
+	struct InstanceData {
+		glm::mat4 Model;
+		float TextureID;
+	};
+
 	Shared<CamControl> Camera;
 	Shared<Shader> VoxelShader;
 
 	Shared<VertexArray> Shape;
-	glm::vec3 Position;
-	float Scale;
+	Transform ent, ent2;
+	Shared<Texture2D> Test, Test1;
 
 	Shared<VertexArray> MakeCube();
 
 	void TestLayer::OnAttach() 
 	{
-		VoxelShader = Shader::Create("assets/shaders/Voxel.glsl");
 		auto& window = Application::Get().GetWindow();
 		window->SetCaptureMouse(true);
 		Camera = CreateShared<CamControl>((float) window->GetWidth(), (float) window->GetHeight());
 		Camera->SetSpeed(5.0f);
 
 		Shape = MakeCube();
+		Test = Texture2D::Create("assets/textures/test.jpg");
+		Test1 = Texture2D::Create("assets/textures/test1.jpg");
 
-		Position = { 0, 0, 1 };
-		Scale = 1.0f;
+		ent.Position = { 0, 0, 1 };
+		ent2.Position = { 1, 0, 1 };
 
 		RenderCMD::EnableFaceCulling(true);
 		RenderCMD::SetCullFace(CullFace::BACK);
+
+		VoxelShader = Shader::Create("assets/shaders/Voxel.glsl");
+		VoxelShader->Bind();
+
+		std::vector<InstanceData> instanceData;
+		float index = 0.0f;
+		for (int i = -2; i <= 2; i++) {
+			for (int j = -2; j <= 2; j++) {
+				Transform trans;
+				trans.Position.x = i;
+				trans.Position.y = -1.0f;
+				trans.Position.z = j;
+
+				InstanceData data;
+				data.Model = glm::mat4(1.0f);
+				data.Model = glm::translate(data.Model, trans.Position);
+				data.Model = glm::scale(data.Model, glm::vec3(trans.Scale));
+
+				data.TextureID = index++;
+				instanceData.push_back(data);
+				if (index > 1.0f) index = 0.0f;
+			}
+		}
+
+		Shared<VertexBuffer> instanceVBO = VertexBuffer::Create(instanceData.data(), instanceData.size() * sizeof(InstanceData));
+		instanceVBO->SetLayout({
+			{ ShaderDataType::Mat4, "a_Transform", false, true, 4, offsetof(InstanceData, Model) },
+			{ ShaderDataType::Float, "a_InstanceTexId", false, true, 8, offsetof(InstanceData, TextureID) },
+		});
+		Shape->AddVertexBuffer(instanceVBO);
+
+		uint32_t samplers[32];
+		for (int i = 0; i < 32; ++i)
+			samplers[i] = i;
+
+		VoxelShader->SetIntArray("u_Textures", (int*)samplers, 32);
 	}
 
 	void TestLayer::OnDetach() 
@@ -63,13 +111,11 @@ namespace Game
 
 		VoxelShader->Bind();
 		VoxelShader->SetMat4("u_ProjectionView", Camera->GetCamera()->GetProjectionView());
-		VoxelShader->SetFloat4("u_Color", color);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), Position) *
-			glm::scale(glm::mat4(1.0f), glm::vec3(Scale));
+		Test->Bind(0);
+		Test1->Bind(1);
 
-		VoxelShader->SetMat4("u_Model", model);
-		RenderCMD::DrawIndexed(Shape);
+		RenderCMD::DrawInstanced(Shape, 5 * 5);
 
 		VoxelShader->Unbind();
 	}
@@ -100,41 +146,44 @@ namespace Game
 
 		float vertices[] = {
 			// North
-			 0.5f, -0.5f,  0.5f,
-			 0.5f,  0.5f,  0.5f,
-			-0.5f,  0.5f,  0.5f,
-			-0.5f, -0.5f,  0.5f,
+			 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+			-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 			// East
-			-0.5f, -0.5f,  0.5f,
-			-0.5f,  0.5f,  0.5f,
-			-0.5f,  0.5f, -0.5f,
-			-0.5f, -0.5f, -0.5f,
+			-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 			// South
-			-0.5f, -0.5f, -0.5f,
-			-0.5f,  0.5f, -0.5f,
-			 0.5f,  0.5f, -0.5f,
-			 0.5f, -0.5f, -0.5f,
+			-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+			 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 			// West
-			 0.5f, -0.5f, -0.5f,
-			 0.5f,  0.5f, -0.5f,
-			 0.5f,  0.5f,  0.5f,
-			 0.5f, -0.5f,  0.5f,
+			 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+			 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 			// Top
-			-0.5f,  0.5f, -0.5f,
-			-0.5f,  0.5f,  0.5f,
-			 0.5f,  0.5f,  0.5f,
-			 0.5f,  0.5f, -0.5f,
+			-0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 			// Bottom
-			-0.5f, -0.5f,  0.5f,
-			-0.5f, -0.5f, -0.5f,
-			 0.5f, -0.5f, -0.5f,
-			 0.5f, -0.5f,  0.5f,
+			-0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+			 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
+			 0.5f, -0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
 		};
 
 		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
 		vbo->SetLayout({
 			{ ShaderDataType::Float3, "a_Position" },
-			});
+			{ ShaderDataType::Float4, "a_Color" },
+			{ ShaderDataType::Float2, "a_TexCoords" },
+			{ ShaderDataType::Float,  "a_TextureId" },
+		});
 		result->AddVertexBuffer(vbo);
 
 		uint32_t indices[] = {
@@ -156,6 +205,7 @@ namespace Game
 			20, 21, 22,
 			22, 23, 20
 		};
+
 		Shared<IndexBuffer> ebo = IndexBuffer::Create(indices, sizeof(indices));
 		result->SetIndexBuffer(ebo);
 
