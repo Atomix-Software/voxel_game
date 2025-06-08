@@ -51,6 +51,7 @@ project "Voxel_Game"
 		"%{ENGINE_INCLUDE_DIR.OAL}",
 		"%{ENGINE_INCLUDE_DIR.SNDFILE}",
 		"%{ENGINE_INCLUDE_DIR.GLM}",
+		"%{prj.name}/src"
 	}
 	
 	links {
