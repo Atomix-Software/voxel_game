@@ -13,34 +13,17 @@ namespace Game
 	glm::vec3 Position;
 	float Scale;
 
+	Shared<VertexArray> MakeCube();
+
 	void TestLayer::OnAttach() 
 	{
 		VoxelShader = Shader::Create("assets/shaders/Voxel.glsl");
 		auto& window = Application::Get().GetWindow();
 		window->SetCaptureMouse(true);
-		Camera = CreateShared<CamControl>(window->GetWidth(), window->GetHeight());
+		Camera = CreateShared<CamControl>((float) window->GetWidth(), (float) window->GetHeight());
 		Camera->SetSpeed(5.0f);
 
-		Shape = VertexArray::Create();
-
-		float vertices[] = {
-			-0.5f, -0.5f, 0.0f,
-			-0.5f,  0.5f, 0.0f,
-			 0.5f,  0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-		};
-		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
-		vbo->SetLayout({
-			{ ShaderDataType::Float3, "a_Position" },
-		});
-		Shape->AddVertexBuffer(vbo);
-
-		uint32_t indices[] = {
-			0, 1, 2,
-			2, 3, 0
-		};
-		Shared<IndexBuffer> ebo = IndexBuffer::Create(indices, sizeof(indices));
-		Shape->SetIndexBuffer(ebo);
+		Shape = MakeCube();
 
 		Position = { 0, 0, 1 };
 		Scale = 1.0f;
@@ -51,7 +34,7 @@ namespace Game
 
 	void TestLayer::OnDetach() 
 	{
-
+	
 	}
 
 	void TestLayer::OnUpdate(Timestep ts)
@@ -93,8 +76,7 @@ namespace Game
 
 	void TestLayer::OnImGuiRender() 
 	{
-
-#if GAME_DEBUG 1
+#if GAME_DEBUG
 		if (ImGui::Begin("Cam Data"))
 		{
 			auto& cam = Camera->GetCamera();
@@ -110,6 +92,74 @@ namespace Game
 	void TestLayer::OnEvent(Event& event) 
 	{
 		Camera->OnEvent(event);
+	}
+
+	Shared<VertexArray> MakeCube()
+	{
+		Shared<VertexArray> result = VertexArray::Create();
+
+		float vertices[] = {
+			// North
+			 0.5f, -0.5f,  0.5f,
+			 0.5f,  0.5f,  0.5f,
+			-0.5f,  0.5f,  0.5f,
+			-0.5f, -0.5f,  0.5f,
+			// East
+			-0.5f, -0.5f,  0.5f,
+			-0.5f,  0.5f,  0.5f,
+			-0.5f,  0.5f, -0.5f,
+			-0.5f, -0.5f, -0.5f,
+			// South
+			-0.5f, -0.5f, -0.5f,
+			-0.5f,  0.5f, -0.5f,
+			 0.5f,  0.5f, -0.5f,
+			 0.5f, -0.5f, -0.5f,
+			// West
+			 0.5f, -0.5f, -0.5f,
+			 0.5f,  0.5f, -0.5f,
+			 0.5f,  0.5f,  0.5f,
+			 0.5f, -0.5f,  0.5f,
+			// Top
+			-0.5f,  0.5f, -0.5f,
+			-0.5f,  0.5f,  0.5f,
+			 0.5f,  0.5f,  0.5f,
+			 0.5f,  0.5f, -0.5f,
+			// Bottom
+			-0.5f, -0.5f,  0.5f,
+			-0.5f, -0.5f, -0.5f,
+			 0.5f, -0.5f, -0.5f,
+			 0.5f, -0.5f,  0.5f,
+		};
+
+		Shared<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
+		vbo->SetLayout({
+			{ ShaderDataType::Float3, "a_Position" },
+			});
+		result->AddVertexBuffer(vbo);
+
+		uint32_t indices[] = {
+			0, 1, 2,
+			2, 3, 0,
+
+			4, 5, 6,
+			6, 7, 4,
+
+			8, 9, 10,
+			10, 11, 8,
+
+			12, 13, 14,
+			14, 15, 12,
+
+			16, 17, 18,
+			18, 19, 16,
+
+			20, 21, 22,
+			22, 23, 20
+		};
+		Shared<IndexBuffer> ebo = IndexBuffer::Create(indices, sizeof(indices));
+		result->SetIndexBuffer(ebo);
+
+		return result;
 	}
 
 }
