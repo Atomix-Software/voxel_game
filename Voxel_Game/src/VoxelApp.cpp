@@ -10,11 +10,27 @@ namespace Game
 	public:
 		VoxelApp(const Arcane::WindowProps& props) :
 			Application(props) {
-			PushLayer(new TestLayer());
+			m_GameLayer = new TestLayer();
+			PushLayer(m_GameLayer);
 		}
+
+		~VoxelApp()
+		{
+			Application::~Application();
+			PopLayer(m_GameLayer);
+		}
+
+	private:
+		TestLayer* m_GameLayer;
 	};
 }
 
 Arcane::Application* Arcane::CreateApplication() {
-	return new Game::VoxelApp({ "" });
+	WindowProps props;
+	props.Title = "Voxel Game";
+	props.Width = 860;
+	props.Height = 480;
+	props.Resizable = true;
+
+	return new Game::VoxelApp(props);
 }

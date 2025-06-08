@@ -1,6 +1,9 @@
 #pragma once
 
+#define GAME_DEBUG 0
+
 #include <Arcane.h>
+#include "Game/CamControl.h"
 
 namespace Game
 {
