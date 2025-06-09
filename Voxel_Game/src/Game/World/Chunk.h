@@ -12,7 +12,7 @@ namespace Game
 		Chunk();
 		~Chunk();
 
-		inline BlockType GetBlockType(const glm::vec3& pos) { m_Blocks[(int)pos.x][(int)pos.y][(int)pos.z]; }
+		inline BlockId GetBlockId(const glm::vec3& pos) { m_Blocks[(int)pos.x][(int)pos.y][(int)pos.z]; }
 
 		inline glm::vec3& GetPosition() { return m_Position; }
 		inline const glm::vec3& GetPosition() const { return m_Position; }
@@ -32,6 +32,5 @@ namespace Game
 		glm::vec3 m_Position;
 	};
 
-	static void Create_Face();
-	static void Create_Block();
+	static Arcane::Shared<Arcane::VertexArray> Create_Block();
 }

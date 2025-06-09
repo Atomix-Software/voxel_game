@@ -2,6 +2,8 @@
 
 namespace Game
 {
+	using namespace Arcane;
+
 	Chunk::Chunk()
 	{
 		Init_Blocks();
@@ -17,16 +19,13 @@ namespace Game
 		for (auto y = 0; y < MAX_HEIGHT; ++y)
 			for (auto x = 0; x < MAX_DEPTH; ++x)
 				for (auto z = 0; z < MAX_WIDTH; ++z)
-					m_Blocks[x][y][z] = BlockType::AIR;
+					m_Blocks[x][y][z] = BlockId::AIR;
 	}
 
-	void Create_Face()
+	Shared<VertexArray> Create_Block()
 	{
+		Shared<VertexArray> result = VertexArray::Create();
 
-	}
-
-	void Create_Block()
-	{
-
+		return result;
 	}
 }

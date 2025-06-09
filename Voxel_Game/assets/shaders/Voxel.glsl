@@ -6,8 +6,8 @@ layout(location=1) in vec4  a_Color;
 layout(location=2) in vec2  a_TexCoords;
 layout(location=3) in float a_TextureId;
 
-layout(location=4) in mat4  a_Transform;
-layout(location=8) in float a_InstanceTexId;
+layout(location=4) in mat4  i_Transform;
+layout(location=8) in float i_InstanceTexId;
 
 uniform mat4 u_ProjectionView;
 
@@ -19,9 +19,9 @@ void main()
 {
 	v_Color      = a_Color;
 	v_TexCoords  = a_TexCoords;
-	v_TextureId  = a_InstanceTexId;
+	v_TextureId  = i_InstanceTexId;
 
-	gl_Position  = u_ProjectionView * a_Transform * vec4(a_Position, 1.0);
+	gl_Position  = u_ProjectionView * i_Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment
