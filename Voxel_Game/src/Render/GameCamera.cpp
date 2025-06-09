@@ -8,9 +8,8 @@ namespace Game
 		Camera(), m_FOV(fov), m_Width(width), m_Height(height)
 	{
 		Resize(m_Width, m_Height);
-
 		m_Up = glm::vec3(CameraConsts::WORLD_UP);
-		m_Front = { 0.0f, 0.0f, -1.0f };
+		SetRotation({ 0, 90.0f, 0 });
 	}
 
 	void GameCamera::UpdateMatrices()

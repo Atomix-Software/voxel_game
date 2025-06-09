@@ -1,6 +1,6 @@
 #pragma once
 
-#define GAME_DEBUG 0
+#define GAME_DEBUG 1
 
 #include <Arcane.h>
 #include "Game/CamControl.h"

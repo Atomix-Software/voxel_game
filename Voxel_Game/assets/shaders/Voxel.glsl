@@ -17,10 +17,11 @@ out float v_TextureId;
 
 void main()
 {
-	v_Color     = a_Color;
-	v_TexCoords = a_TexCoords;
+	v_Color      = a_Color;
+	v_TexCoords  = a_TexCoords;
 	v_TextureId  = a_InstanceTexId;
-	gl_Position = u_ProjectionView * a_Transform * vec4(a_Position, 1.0);
+
+	gl_Position  = u_ProjectionView * a_Transform * vec4(a_Position, 1.0);
 }
 
 #type fragment

@@ -8,70 +8,74 @@ namespace Game
 
 	struct Transform
 	{
-		glm::vec3 Position;
+		glm::vec3 Position = glm::vec3(0);
+		glm::vec3 Rotation = glm::vec3(0);
 		float Scale = 1.0f;
 	};
 	
 	struct InstanceData {
-		glm::mat4 Model;
-		float TextureID;
+		glm::mat4 Model = glm::mat4(1.0f);
+		float TextureID = 0.0f;
 	};
 
 	Shared<CamControl> Camera;
 	Shared<Shader> VoxelShader;
 
-	Shared<VertexArray> Shape;
-	Transform ent, ent2;
+	Shared<VertexArray> Cube;
 	Shared<Texture2D> Test, Test1;
 
 	Shared<VertexArray> MakeCube();
+	std::vector<InstanceData> instanceData;
 
 	void TestLayer::OnAttach() 
 	{
 		auto& window = Application::Get().GetWindow();
 		window->SetCaptureMouse(true);
 		Camera = CreateShared<CamControl>((float) window->GetWidth(), (float) window->GetHeight());
+		Camera->GetCamera()->SetPosition({0, 61, 0});
 		Camera->SetSpeed(5.0f);
 
-		Shape = MakeCube();
-		Test = Texture2D::Create("assets/textures/test.jpg");
-		Test1 = Texture2D::Create("assets/textures/test1.jpg");
-
-		ent.Position = { 0, 0, 1 };
-		ent2.Position = { 1, 0, 1 };
+		Cube = MakeCube();
+		Test = Texture2D::Create("assets/textures/test1.jpg");
+		Test1 = Texture2D::Create("assets/textures/test.jpg");
 
 		RenderCMD::EnableFaceCulling(true);
 		RenderCMD::SetCullFace(CullFace::BACK);
 
-		VoxelShader = Shader::Create("assets/shaders/Voxel.glsl");
-		VoxelShader->Bind();
+		for (int k = 0; k < 60; k++)
+		{
+			for (int i = 0; i < 16; i++)
+			{
+				for (int j = 0; j < 16; j++)
+				{
+						Transform trans;
+						trans.Position.x = i;
+						trans.Position.y = k;
+						trans.Position.z = j;
 
-		std::vector<InstanceData> instanceData;
-		float index = 0.0f;
-		for (int i = -2; i <= 2; i++) {
-			for (int j = -2; j <= 2; j++) {
-				Transform trans;
-				trans.Position.x = i;
-				trans.Position.y = -1.0f;
-				trans.Position.z = j;
+						trans.Rotation.y = 90.0f;
 
-				InstanceData data;
-				data.Model = glm::mat4(1.0f);
-				data.Model = glm::translate(data.Model, trans.Position);
-				data.Model = glm::scale(data.Model, glm::vec3(trans.Scale));
+						InstanceData data;
+						data.Model = glm::translate(data.Model, trans.Position);
+						data.Model = glm::rotate(data.Model, glm::radians(trans.Rotation.x), { 1, 0, 0 });
+						data.Model = glm::rotate(data.Model, glm::radians(trans.Rotation.y), { 0, 1, 0 });
+						data.Model = glm::rotate(data.Model, glm::radians(trans.Rotation.z), { 0, 0, 1 });
 
-				data.TextureID = index++;
-				instanceData.push_back(data);
-				if (index > 1.0f) index = 0.0f;
+						data.TextureID = (i + j) % 2;
+						instanceData.push_back(data);
+				}
 			}
 		}
 
 		Shared<VertexBuffer> instanceVBO = VertexBuffer::Create(instanceData.data(), instanceData.size() * sizeof(InstanceData));
 		instanceVBO->SetLayout({
-			{ ShaderDataType::Mat4, "a_Transform", false, true, 4, offsetof(InstanceData, Model) },
-			{ ShaderDataType::Float, "a_InstanceTexId", false, true, 8, offsetof(InstanceData, TextureID) },
-		});
-		Shape->AddVertexBuffer(instanceVBO);
+			{ ShaderDataType::Mat4, "a_Transform", false, true, 4 },
+			{ ShaderDataType::Float, "a_InstanceTexId", false, true, 8 },
+			});
+		Cube->AddVertexBuffer(instanceVBO);
+
+		VoxelShader = Shader::Create("assets/shaders/Voxel.glsl");
+		VoxelShader->Bind();
 
 		uint32_t samplers[32];
 		for (int i = 0; i < 32; ++i)
@@ -115,7 +119,7 @@ namespace Game
 		Test->Bind(0);
 		Test1->Bind(1);
 
-		RenderCMD::DrawInstanced(Shape, 5 * 5);
+		RenderCMD::DrawInstanced(Cube, instanceData.size());
 
 		VoxelShader->Unbind();
 	}
