@@ -9,7 +9,6 @@ namespace Game
 	{
 		Resize(m_Width, m_Height);
 		m_Up = glm::vec3(CameraConsts::WORLD_UP);
-		SetRotation({ 0, 90.0f, 0 });
 	}
 
 	void GameCamera::UpdateMatrices()
@@ -23,10 +22,10 @@ namespace Game
 		front.z = glm::cos(pitch) * glm::cos(yaw);
 		m_Front = glm::normalize(front);
 
-		m_Right = glm::normalize(glm::cross(m_Front, CameraConsts::WORLD_UP));
-		m_Up = glm::normalize(glm::cross(m_Right, m_Front));
+		m_Right = glm::normalize(glm::cross(CameraConsts::WORLD_UP, m_Front));
+		m_Up = glm::normalize(glm::cross(m_Front, m_Right));
 
-		m_View = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
+		m_View = glm::lookAtLH(m_Position, m_Position + m_Front, CameraConsts::WORLD_UP);
 	}
 
 }

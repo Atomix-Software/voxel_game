@@ -17,16 +17,10 @@ namespace Game
 
 	void CamControl::OnUpdate(Timestep ts)
 	{
-		float pitch = m_Camera->GetRotation().x;
-		float yaw = m_Camera->GetRotation().y;
 		float velocity = ts * m_Speed;
 
-		glm::vec3 forward(0);
-		forward.x = glm::cos(glm::radians(pitch)) * glm::sin(glm::radians(yaw));
-		forward.z = glm::cos(glm::radians(pitch)) * glm::cos(glm::radians(yaw));
-		forward = glm::normalize(forward);
-
-		glm::vec3 right = glm::normalize(glm::cross(forward, CameraConsts::WORLD_UP));
+		glm::vec3 forward = glm::normalize(glm::vec3(m_Camera->GetFront().x, 0.0f, m_Camera->GetFront().z));
+		glm::vec3 right = glm::normalize(m_Camera->GetRight());
 
 		glm::vec3 position = m_Camera->GetPosition();
 		if (Input::IsKeyPressed(Key::W))
@@ -56,7 +50,7 @@ namespace Game
 
 	bool CamControl::OnWindowResize(WindowResizeEvent& event)
 	{
-		m_Camera->Resize(event.GetWidth(), event.GetHeight());
+		m_Camera->Resize((float) event.GetWidth(), (float) event.GetHeight());
 		return false;
 	}
 
@@ -88,14 +82,14 @@ namespace Game
 		// Update yaw and pitch
 		glm::vec3 rotation = m_Camera->GetRotation();
 		rotation.x += yOffset; // Pitch (vertical rotation)
-		rotation.y -= xOffset; // Yaw (horizontal rotation)
+		rotation.y += xOffset; // Yaw (horizontal rotation)
 
 		// Constrain pitch to avoid flipping
-		if (rotation.x >= 89.0f) rotation.x = 89.0f;
-		else if (rotation.x <= -89.0f) rotation.x = -89.0f;
+		if (rotation.x > 89.0f) rotation.x = 89.0f;
+		else if (rotation.x < -89.0f) rotation.x = -89.0f;
 
-		if (rotation.y >= 360.0f) rotation.y = 0.0f;
-		else if (rotation.y <= 0.0f) rotation.y = 360.0f;
+		if (rotation.y > 360.0f) rotation.y = 0.0f;
+		else if (rotation.y < 0.0f) rotation.y = 360.0f;
 
 		// Apply updated rotation to the camera
 		m_Camera->SetRotation(rotation);

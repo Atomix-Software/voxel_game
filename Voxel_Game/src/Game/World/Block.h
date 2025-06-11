@@ -26,13 +26,37 @@ namespace Game
 		SIZE
 	};
 
+	enum Face : uint32_t
+	{
+		Front = 0, Right,
+		Back, Left,
+		Top, Bottom
+	};
+	
+	struct FaceUV {
+		glm::vec2 Offset = glm::vec2(0.0f);
+		glm::vec2 Scale  = glm::vec2(1.0f);
+	}; 
+	
+	struct BlockUVData {
+		FaceUV Faces[6]; // 6 faces per block
+	};
+
 	class Blocks
 	{
 	public:
+
+	public:
 		static void Init();
+
+		static const glm::vec2* GetFace(BlockId id, Face face);
 		static const BlockFaceTextures& GetTextures(BlockId id);
+		inline static const Arcane::Shared<Arcane::Texture2D>& GetAtlas() { return s_AtlasTexture; }
+
+		static std::vector<FaceUV> GenerateSSBOData();
 
 	private:
+		static std::unordered_map<BlockId, std::array<Arcane::Shared<Arcane::SubTexture2D>, 6>> s_BlockFaces;
 		static std::unordered_map<BlockId, BlockFaceTextures> s_BlockTextures;
 		static Arcane::Shared<Arcane::Texture2D> s_AtlasTexture;
 	};

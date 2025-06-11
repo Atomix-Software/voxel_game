@@ -17,7 +17,7 @@ namespace Game
 		{
 			m_Width = width;
 			m_Height = height;
-			m_Projection = glm::perspectiveFov(glm::radians(m_FOV), m_Width, m_Height, 0.01f, 1000.0f);
+			m_Projection = glm::perspectiveFovLH(glm::radians(m_FOV), m_Width, m_Height, 0.01f, 1000.0f);
 		}
 
 		inline float GetFOV() { return m_FOV; }
@@ -26,13 +26,16 @@ namespace Game
 		inline float GetHeight() { return m_Height; }
 		inline float GetAspectRatio() { return m_Width / m_Height; }
 
+		inline glm::vec3& GetFront() { return m_Front; }
+		inline glm::vec3& GetRight() { return m_Right; }
+
 	private:
 		virtual void UpdateMatrices() override;
 
 	private:
 		float m_FOV;
 		float m_Width, m_Height;
-
+		
 		glm::vec3 m_Up;
 		glm::vec3 m_Right;
 		glm::vec3 m_Front;
