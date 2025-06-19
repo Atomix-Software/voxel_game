@@ -4,13 +4,14 @@ namespace Game
 {
 	using namespace Arcane;
 
-#pragma region Blocks Database Class
+#pragma region Block Database
 
-	std::unordered_map<BlockId, std::array<Shared<SubTexture2D>, 6>> Blocks::s_BlockFaces;
-	std::unordered_map<BlockId, BlockFaceTextures> Blocks::s_BlockTextures;
-	Shared<Texture2D> Blocks::s_AtlasTexture;
+	std::unordered_map<BlockId, std::array<Shared<SubTexture2D>, 6>> BlockDatabase::s_BlockFaces;
+	std::unordered_map<BlockId, BlockFaceTextures> BlockDatabase::s_BlockTextures;
+	Shared<Texture2D> BlockDatabase::s_AtlasTexture;
 
-	void Blocks::Init() {
+	// Initialize Texture Data for all Blocks we will have in the game
+	void BlockDatabase::Init() {
 		s_AtlasTexture = Texture2D::Create("assets/textures/blocks.png");
 
 		const glm::vec2 cellSize = { 1.0f, 1.0f };
@@ -81,9 +82,10 @@ namespace Game
 		s_BlockTextures[BlockId::STONE] = stoneTextures;
 	}
 
-	const glm::vec2* Blocks::GetFace(BlockId id, Face face)
+	// Given a proper BlockId and Face, we will return the UV Data related to the Face
+	const glm::vec2* BlockDatabase::GetFace(BlockId id, Face face)
 	{
-		const BlockFaceTextures& textures = Blocks::GetTextures(id);
+		const BlockFaceTextures& textures = BlockDatabase::GetTextures(id);
 
 		switch (face)
 		{
@@ -93,25 +95,30 @@ namespace Game
 			case Face::Left:   return textures.Left   ? textures.Left->GetTexCoords()   : nullptr;
 			case Face::Top:    return textures.Top    ? textures.Top->GetTexCoords()    : nullptr;
 			case Face::Bottom: return textures.Bottom ? textures.Bottom->GetTexCoords() : nullptr;
-			default:           return nullptr;
+			default: {
+				ARC_ERROR("A Valid Face was not used!");
+				return nullptr;
+			}
 		}
 	}
 
-	const BlockFaceTextures& Blocks::GetTextures(BlockId id) 
+	// Return the Collection of Textures for each Face given a specific BlockId
+	const BlockFaceTextures& BlockDatabase::GetTextures(BlockId id) 
 	{
 		auto it = s_BlockTextures.find(id);
-		if (it != s_BlockTextures.end()) {
+		if (it != s_BlockTextures.end())
 			return it->second;
-		}
 
 		static BlockFaceTextures emptyTextures;
 		return emptyTextures;
 	}
 
-	std::vector<FaceUV> Blocks::GenerateSSBOData()
+	// Returns Data to be passed to a Shader Storage Buffer for each BlockId
+	std::vector<FaceUV> BlockDatabase::GenerateSSBOData()
 	{
 		std::vector<FaceUV> result;
 
+		// We truncate the Texture Coords to have the Min/Max coordinates for simplicity
 		auto extract = [](const Shared<SubTexture2D>& sub) -> FaceUV {
 			if (!sub) return { {0.0f, 0.0f}, {1.0f, 1.0f} };
 			return { sub->GetTexCoords()[0], sub->GetTexCoords()[2] - sub->GetTexCoords()[0] };
@@ -133,13 +140,4 @@ namespace Game
 
 #pragma endregion
 
-#pragma region Block Class
-
-	Block::Block()
-	{
-		m_Position = { 0, 0, 0 };
-		m_Rotation = { 0, 90, 0 };
-	}
-
-#pragma endregion
 }

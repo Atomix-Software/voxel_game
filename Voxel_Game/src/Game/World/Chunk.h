@@ -9,8 +9,8 @@ namespace Game
 	class Chunk
 	{
 	public:
-		Chunk();
-		~Chunk();
+		Chunk() { Init(); }
+		~Chunk() {}
 
 		inline BlockId GetBlockId(const glm::vec3& pos) { m_Blocks[(int)pos.x][(int)pos.y][(int)pos.z]; }
 
@@ -18,7 +18,7 @@ namespace Game
 		inline const glm::vec3& GetPosition() const { return m_Position; }
 
 	private:
-		void Init_Blocks();
+		void Init();
 
 	public:
 		static const uint32_t MAX_DEPTH  = 16,
@@ -32,5 +32,4 @@ namespace Game
 		glm::vec3 m_Position;
 	};
 
-	static Arcane::Shared<Arcane::VertexArray> Create_Block();
 }

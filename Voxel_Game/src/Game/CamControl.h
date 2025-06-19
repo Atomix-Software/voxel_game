@@ -14,7 +14,7 @@ namespace Game
 		CamControl(float width, float height, float fov = 67.0f);
 		~CamControl() {}
 
-		void OnUpdate(Arcane::Timestep ts);
+		void OnUpdate(Arcane::Timestep ts, bool paused = false);
 		void OnEvent(Arcane::Event& event);
 
 		inline void SetSpeed(float speed) { m_Speed = speed; }
@@ -31,7 +31,7 @@ namespace Game
 
 	private:
 		Arcane::Shared<GameCamera> m_Camera;
-		bool m_FirstMove;
+		bool m_FirstMove, m_Paused;
 
 		float m_Speed, m_Sensitivity;
 	};

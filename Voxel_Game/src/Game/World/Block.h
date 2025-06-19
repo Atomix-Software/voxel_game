@@ -16,6 +16,22 @@ namespace Game
 		Arcane::Shared<Arcane::SubTexture2D> Right;
 	};
 
+	struct FaceUV {
+		glm::vec2 Offset = glm::vec2(0.0f);
+		glm::vec2 Scale = glm::vec2(1.0f);
+	};
+
+	struct BlockUVData {
+		FaceUV Faces[6]; // 6 faces per block
+	};
+
+	enum Face : uint32_t
+	{
+		Front = 0, Right,
+		Back, Left,
+		Top, Bottom
+	};
+
 	enum BlockId : uint32_t
 	{
 		AIR = 0,
@@ -26,23 +42,7 @@ namespace Game
 		SIZE
 	};
 
-	enum Face : uint32_t
-	{
-		Front = 0, Right,
-		Back, Left,
-		Top, Bottom
-	};
-	
-	struct FaceUV {
-		glm::vec2 Offset = glm::vec2(0.0f);
-		glm::vec2 Scale  = glm::vec2(1.0f);
-	}; 
-	
-	struct BlockUVData {
-		FaceUV Faces[6]; // 6 faces per block
-	};
-
-	class Blocks
+	class BlockDatabase
 	{
 	public:
 
@@ -64,7 +64,12 @@ namespace Game
 	class Block
 	{
 	public:
-		Block();
+		Block() 
+		{
+			m_Position = { 0, 0, 0 };
+			m_Rotation = { 0, 90, 0 };
+		}
+
 		~Block() {}
 
 		inline glm::vec3& GetPosition() { return m_Position; }

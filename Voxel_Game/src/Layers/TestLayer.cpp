@@ -30,6 +30,8 @@ namespace Game
 	Shared<ShaderStorageBuffer> instanceSSBO,uvSSBO;
 	std::vector<InstanceData> instanceData;
 	std::vector<BlockUVData> allBlockUVs;
+	
+	bool paused = false;
 
 	Shared<VertexArray> MakeCube();
 
@@ -38,10 +40,10 @@ namespace Game
 		auto& window = Application::Get().GetWindow();
 		window->SetCaptureMouse(true);
 		Camera = CreateShared<CamControl>((float) window->GetWidth(), (float) window->GetHeight());
-		Camera->GetCamera()->SetPosition({0, 65, 0});
+		Camera->GetCamera()->SetPosition({0, 0, 0});
 		Camera->SetSpeed(5.0f);
 
-		Blocks::Init();
+		BlockDatabase::Init();
 
 		Cube = MakeCube();
 
@@ -52,15 +54,19 @@ namespace Game
 		std::mt19937 gen(rd());
 		std::uniform_int_distribution<int> random(0, 10);
 
-		float height = 64.0f;
-		for (auto k = 0.0f; k < height; k++)
+		float size = 16.0f;
+		for (auto k = 0.0f; k < size; k++)
 		{
-			for (auto i = 0.0f; i < 16.0f; i++)
+			for (auto i = 0.0f; i < size; i++)
 			{
-				for (auto j = 0.0f; j < 16.0f; j++)
+				for (auto j = 0.0f; j < size; j++)
 				{
 						Transform trans;
 						InstanceData data;
+
+
+						if (random(gen) > 8)
+							continue;
 
 						if ((int) (i + j) % 2 == 0) data.BlockId = BlockId::GRASS;
 						else data.BlockId = BlockId::DIRT;
@@ -68,14 +74,14 @@ namespace Game
 						if (random(gen) >= 7)
 							data.BlockId = BlockId::STONE;
 
-						if ((data.BlockId == BlockId::DIRT || data.BlockId == BlockId::STONE) && k >= height - 1)
+						if ((data.BlockId == BlockId::DIRT || data.BlockId == BlockId::STONE) && k >= size - 1)
 							data.BlockId = BlockId::GRASS;
 
-						if ((data.BlockId == BlockId::GRASS || data.BlockId == BlockId::STONE) && k < height - 1)
+						if ((data.BlockId == BlockId::GRASS || data.BlockId == BlockId::STONE) && k < size - 1)
 						{
 							data.BlockId = BlockId::DIRT;
 
-							if (k <= height - 6)
+							if (k <= size - 6)
 							{
 								if (random(gen) > 2)
 									data.BlockId = data.BlockId != BlockId::STONE ? BlockId::STONE : data.BlockId;
@@ -105,7 +111,7 @@ namespace Game
 
 		instanceSSBO = ShaderStorageBuffer::Create((uint32_t) instanceData.size() * sizeof(InstanceData));
 
-		std::vector<FaceUV> faceUVs = Blocks::GenerateSSBOData();
+		std::vector<FaceUV> faceUVs = BlockDatabase::GenerateSSBOData();
 		for (auto i = 0; i < faceUVs.size() / 6; ++i)
 		{
 			BlockUVData data;
@@ -135,13 +141,22 @@ namespace Game
 
 	void TestLayer::OnUpdate(Timestep ts)
 	{
+		if (paused && Input::KeyJustPressed(Key::Escape))
+			Application::Get().Stop();
+
+		if (Input::KeyJustPressed(Key::P))
+		{
+			paused = !paused;
+			Application::Get().GetWindow()->SetCaptureMouse(!paused);
+		}
+
+		Camera->OnUpdate(ts, paused);
 		RenderCMD::Clear(true);
-		Camera->OnUpdate(ts);
 
 		VoxelShader->Bind();
 		VoxelShader->SetMat4("u_ProjectionView", Camera->GetCamera()->GetProjectionView());
 
-		Blocks::GetAtlas()->Bind(0);
+		BlockDatabase::GetAtlas()->Bind(0);
 
 		instanceSSBO->Bind(0); 
 		instanceSSBO->SetData(instanceData.data(), (uint32_t) instanceData.size() * sizeof(InstanceData));

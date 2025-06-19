@@ -7,7 +7,7 @@ namespace Game
 	using namespace Arcane;
 
 	CamControl::CamControl(float width, float height, float fov) :
-		m_FirstMove(true)
+		m_FirstMove(true), m_Paused(false)
 	{
 		m_Speed = 25.0f;
 		m_Sensitivity = 0.1f;
@@ -15,8 +15,11 @@ namespace Game
 		m_Camera = CreateShared<GameCamera>(fov, width, height); 
 	}
 
-	void CamControl::OnUpdate(Timestep ts)
+	void CamControl::OnUpdate(Timestep ts, bool paused)
 	{
+		m_Paused = paused;
+		if (m_Paused) return;
+
 		float velocity = ts * m_Speed;
 
 		glm::vec3 forward = glm::normalize(glm::vec3(m_Camera->GetFront().x, 0.0f, m_Camera->GetFront().z));
@@ -90,6 +93,8 @@ namespace Game
 
 		if (rotation.y > 360.0f) rotation.y = 0.0f;
 		else if (rotation.y < 0.0f) rotation.y = 360.0f;
+
+		if (m_Paused) return false;
 
 		// Apply updated rotation to the camera
 		m_Camera->SetRotation(rotation);
